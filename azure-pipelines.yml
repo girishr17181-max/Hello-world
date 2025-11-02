@@ -67,16 +67,27 @@ stages:
         pollingTimeoutSec: '300'
 
 - stage: DockerBuild
-  displayName: 'Build Docker Image (Local Only)'
-  dependsOn: SonarQube
+  displayName: 'Docker Build Stage'
+  dependsOn: Build    # ensures Maven runs first
   jobs:
   - job: BuildDockerImage
-    displayName: 'Build Docker Image Locally'
+    displayName: 'Build Docker Image'
+    pool:
+      name: default   # your self-hosted mac agent
     steps:
+    - checkout: self
+
+    # Optional: verify JAR exists before building
+    - script: |
+        echo "Checking target directory..."
+        ls -l target
+      displayName: "Verify target directory"
+
     - task: Docker@2
       displayName: 'Build Docker Image'
       inputs:
-        command: 'build'
-        Dockerfile: '**/Dockerfile'
+        command: build
+        Dockerfile: 'Dockerfile'
         tags: |
-          java-hello-world:latest        
+          $(Build.BuildId)
+
