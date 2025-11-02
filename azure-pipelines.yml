@@ -28,3 +28,38 @@ stages:
         goals: 'clean package'
         publishJUnitResults: false
 
+- stage: SonarQube
+  displayName: 'SonarQube Code Analysis'
+  dependsOn: Build
+  jobs:
+  - job: CodeQuality
+    displayName: 'Run SonarQube Analysis'
+    steps:
+    # Step 1: Prepare SonarQube Scanner
+    - task: SonarQubePrepare@5
+      displayName: 'Prepare SonarQube Analysis'
+      inputs:
+        SonarQube: 'sonarQube'  # <-- must match your service connection name
+        scannerMode: 'Other'
+        extraProperties: |
+          sonar.projectKey=java-hello-world
+          sonar.projectName=Java Hello World
+          sonar.sourceEncoding=UTF-8
+          sonar.sources=src/main/java
+
+    # Step 2: Run Maven build with SonarQube scan
+    - task: Maven@4
+      displayName: 'Run SonarQube Maven Build'
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'clean verify sonar:sonar'
+        options: >
+          -Dsonar.projectKey=java-hello-world
+          -Dsonar.projectName=JavaHelloWorld
+        publishJUnitResults: false
+
+    # Step 3: Publish SonarQube results
+    - task: SonarQubePublish@5
+      displayName: 'Publish SonarQube Results'
+      inputs:
+        pollingTimeoutSec: '300'
