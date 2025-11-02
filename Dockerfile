@@ -4,11 +4,12 @@ FROM openjdk:17-jdk-slim
 # Step 2: Set working directory inside the container
 WORKDIR /app
 
-# Step 3: Copy the built JAR file from target directory to container
-COPY target/*.jar app.jar
+# Step 3: Copy the built JAR file (artifact) to the container
+COPY *.jar app.jar
 
 # Step 4: Expose the port your app runs on
 EXPOSE 8080
 
 # Step 5: Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
