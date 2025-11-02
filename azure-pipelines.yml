@@ -2,7 +2,8 @@ trigger:
 - main
 
 pool:
-  vmImage: mac-agent
+  name: default
+
 
 steps:
 - script: echo Hello, world!
