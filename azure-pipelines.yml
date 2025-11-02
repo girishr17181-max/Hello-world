@@ -46,6 +46,7 @@ stages:
           sonar.projectName=Java Hello World
           sonar.sourceEncoding=UTF-8
           sonar.sources=src/main/java
+          
 
     # Step 2: Run Maven build with SonarQube scan
     - task: Maven@4
@@ -56,6 +57,7 @@ stages:
         options: >
           -Dsonar.projectKey=java-hello-world
           -Dsonar.projectName=JavaHelloWorld
+          -Dsonar.branch.name=""
         publishJUnitResults: false
 
     # Step 3: Publish SonarQube results
