@@ -65,3 +65,18 @@ stages:
       displayName: 'Publish SonarQube Results'
       inputs:
         pollingTimeoutSec: '300'
+
+- stage: DockerBuild
+  displayName: 'Build Docker Image (Local Only)'
+  dependsOn: SonarQube
+  jobs:
+  - job: BuildDockerImage
+    displayName: 'Build Docker Image Locally'
+    steps:
+    - task: Docker@2
+      displayName: 'Build Docker Image'
+      inputs:
+        command: 'build'
+        Dockerfile: '**/Dockerfile'
+        tags: |
+          java-hello-world:latest        
