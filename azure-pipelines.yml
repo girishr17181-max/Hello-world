@@ -4,8 +4,27 @@ trigger:
 pool:
   name: default
 
+stages:
+- stage: Checkout
+  displayName: 'Checkout Code'
+  jobs:
+  - job: CheckoutCode
+    displayName: 'Get code from GitHub'
+    steps:
+    - checkout: self
+      displayName: 'Checkout Source Code'
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+- stage: Build
+  displayName: 'Maven Build Stage'
+  dependsOn: Checkout
+  jobs:
+  - job: MavenBuild
+    displayName: 'Build Java Application'
+    steps:
+    - task: Maven@4
+      displayName: 'Run Maven Build'
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'clean package'
+        publishJUnitResults: false
 
