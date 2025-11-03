@@ -4,6 +4,7 @@ trigger:
 pool:
   name: default
 
+# --- Stage 1: Checkout ---
 stages:
 - stage: Checkout
   displayName: 'Checkout Code'
@@ -14,6 +15,8 @@ stages:
     - checkout: self
       displayName: 'Checkout Source Code'
 
+
+# --- Stage 2: Maven Build ---
 - stage: Build
   displayName: 'Maven Build Stage'
   dependsOn: Checkout
@@ -31,7 +34,7 @@ stages:
     - publish: $(System.DefaultWorkingDirectory)/target
       artifact: drop
      
-
+# --- Stage 3: SonarQube ---
 - stage: SonarQube
   displayName: 'SonarQube Code Analysis'
   dependsOn: Build
@@ -70,7 +73,7 @@ stages:
       inputs:
         pollingTimeoutSec: '300'
 
-# --- Stage 2: Docker Build ---
+# --- Stage 4: Docker Build ---
 - stage: DockerBuild
   displayName: 'Docker Build Stage'
   dependsOn: Build
@@ -97,5 +100,16 @@ stages:
         Dockerfile: 'Dockerfile'
         buildContext: '$(Pipeline.Workspace)/drop'
         tags: |
-          $(Build.BuildId)
+          girishr17181/hello-world:$(Build.BuildId)
+          girishr17181/hello-world:latest
+
+    - task: Docker@2
+      displayName: 'Push Docker Image to Docker Hub'
+      inputs:
+        command: push
+        containerRegistry: 'docker-hub'
+        tags: |
+          girishr17181/hello-world:$(Build.BuildId)
+          girishr17181/hello-world:latest     
+
 
