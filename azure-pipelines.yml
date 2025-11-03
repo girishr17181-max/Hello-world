@@ -142,18 +142,18 @@ stages:
         runOptions: 'commands'
         commands: |
           echo "Logging into Docker Hub..."
-          docker login -u girishr17181 -p $(dockerHubPassword)
+          sudo docker login -u girishr17181 -p $(dockerHubPassword)
 
           echo "Pulling latest Docker image..."
-          docker pull girishr17181/hello-world:v1.0
+          sudo docker pull girishr17181/hello-world:v1.0
 
           echo "Stopping existing container (if running)..."
-          docker rm -f hello-world-app || true
+          sudo docker rm -f hello-world-app || true
 
           echo "Starting new container..."
-          docker run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:v1.0
+          sudo docker run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:v1.0
 
           echo "Container deployed successfully!"
-          docker ps
+          sudo docker ps
 
 
