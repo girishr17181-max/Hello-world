@@ -144,16 +144,16 @@ stages:
           echo "🚀 Starting deployment on EC2..."
 
           echo "🔹 Logging into Docker Hub..."
-          sudo /usr/bin/docker login -u girishr17181 -p $(dockerHubPassword)
+          sudo docker login -u girishr17181 -p $(dockerHubPassword)
 
           echo "🔹 Pulling latest image..."
-          sudo /usr/bin/docker pull girishr17181/hello-world:latest
+          sudo docker pull girishr17181/hello-world:latest
 
           echo "🔹 Removing existing container..."
-          sudo /usr/bin/docker rm -f hello-world-app || true
+          sudo docker rm -f hello-world-app || true
 
           echo "🔹 Starting new container..."
-          sudo /usr/bin/docker run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:latest
+          sudo docker run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:latest
 
           echo "✅ Deployment complete!"
-          sudo /usr/bin/docker ps
+          sudo docker ps
