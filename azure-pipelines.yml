@@ -133,39 +133,31 @@ stages:
     pool:
       name: default
     variables:
-      - group: docker-credentials   # 👈 contains your Docker PAT
+      - group: docker-credentials   # 👈 Docker Hub PAT securely stored here
     steps:
     - task: SSH@0
       displayName: "Pull & Run Docker Container on EC2"
       inputs:
-        sshEndpoint: 'ec2-ssh'
+        sshEndpoint: 'ec2-ssh'   # 👈 your EC2 SSH service connection name
         runOptions: 'commands'
         commands: |
-          echo "🔹 Checking Docker installation..."
-          which docker || sudo find / -type f -name docker 2>/dev/null | head -n 1
-
-          echo "🔹 Detecting Docker binary path..."
-          DOCKER_PATH=$(which docker || echo "/usr/local/bin/docker")
-          echo "Docker binary found at: $DOCKER_PATH"
-
-          echo "🔹 Ensuring Docker works with sudo..."
-          sudo ln -sf $DOCKER_PATH /usr/bin/docker || true
+          echo "🔹 Checking Docker version..."
+          sudo /usr/bin/docker --version
 
           echo "🔹 Logging into Docker Hub..."
-          sudo $DOCKER_PATH login -u girishr17181 -p $(dockerHubPassword)
+          sudo /usr/bin/docker login -u girishr17181 -p $(dockerHubPassword)
 
           echo "🔹 Pulling latest Docker image..."
-          sudo $DOCKER_PATH pull girishr17181/hello-world:v1.0
+          sudo /usr/bin/docker pull girishr17181/hello-world:v1.0
 
-          echo "🔹 Stopping existing container (if running)..."
-          sudo $DOCKER_PATH rm -f hello-world-app || true
+          echo "🔹 Removing existing container if any..."
+          sudo /usr/bin/docker rm -f hello-world-app || true
 
           echo "🔹 Starting new container..."
-          sudo $DOCKER_PATH run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:v1.0
+          sudo /usr/bin/docker run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:v1.0
 
-          echo "✅ Container deployed successfully!"
-          sudo $DOCKER_PATH ps
-
+          echo "✅ Deployment completed successfully!"
+          sudo /usr/bin/docker ps
 
 
 
