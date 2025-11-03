@@ -128,29 +128,32 @@ stages:
 - stage: DeployToEC2
   displayName: 'Deploy Docker Container to AWS EC2'
   dependsOn: DockerBuild
+  variables:
+    - group: docker-credentials   # ✅ variable group containing dockerHubPassword
+
   jobs:
   - job: Deploy
     displayName: 'Deploy Docker Container on EC2'
     steps:
     - task: SSH@0
-      displayName: 'Deploy Docker Container'
+      displayName: 'Pull & Run Docker Container on EC2'
       inputs:
-        sshEndpoint: 'ec2-ssh'    # ✅ your EC2 service connection name in Azure DevOps
+        sshEndpoint: 'ec2-ssh'    # ✅ your EC2 SSH service connection
         runOptions: 'commands'
         commands: |
-          echo "🚀 Starting Docker deployment on EC2..."
+          echo "🚀 Starting deployment on EC2..."
 
           echo "🔹 Logging into Docker Hub..."
-          echo "$(dockerHubPassword)" | sudo docker login -u girishr17181 --password-stdin
+          sudo /usr/bin/docker login -u girishr17181 -p $(dockerHubPassword)
 
           echo "🔹 Pulling latest image..."
-          sudo docker pull girishr17181/hello-world:latest
+          sudo /usr/bin/docker pull girishr17181/hello-world:latest
 
-          echo "🔹 Removing any old container..."
-          sudo docker rm -f hello-world-app || true
+          echo "🔹 Removing existing container..."
+          sudo /usr/bin/docker rm -f hello-world-app || true
 
           echo "🔹 Starting new container..."
-          sudo docker run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:latest
+          sudo /usr/bin/docker run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:latest
 
-          echo "✅ Deployment successful! Running containers:"
-          sudo docker ps
+          echo "✅ Deployment complete!"
+          sudo /usr/bin/docker ps
