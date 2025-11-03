@@ -133,36 +133,27 @@ stages:
     pool:
       name: default
     variables:
-      - group: docker-credentials
+      - group: docker-credentials   # 👈 variable group containing dockerHubPassword
     steps:
     - task: SSH@0
       displayName: "Pull & Run Docker Container on EC2"
       inputs:
-        sshEndpoint: 'ec2-ssh'
+        sshEndpoint: 'ec2-ssh'     # 👈 your service connection to EC2
         runOptions: 'commands'
         commands: |
-          echo "🔹 Checking Docker binary..."
-          DOCKER_PATH=$(command -v docker 2>/dev/null || echo "/usr/bin/docker")
-          echo "🔹 Using Docker binary at: $DOCKER_PATH"
-
-          if [ -z "$DOCKER_PATH" ]; then
-            echo "❌ Docker binary not found!"; exit 1;
-          fi
-
-          echo "🔹 Checking Docker version..."
-          sudo $DOCKER_PATH --version || (echo "❌ Docker not accessible" && exit 1)
-
-          echo "🔹 Logging into Docker Hub..."
-          echo "$(dockerHubPassword)" | sudo $DOCKER_PATH login -u girishr17181 --password-stdin
-
-          echo "🔹 Pulling latest image..."
-          sudo $DOCKER_PATH pull girishr17181/hello-world:v1.0
-
-          echo "🔹 Removing old container if exists..."
-          sudo $DOCKER_PATH rm -f hello-world-app || true
-
-          echo "🔹 Starting new container..."
-          sudo $DOCKER_PATH run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:v1.0
-
-          echo "✅ Deployment done!"
+          echo "🔹 Locating Docker binary..." && \
+          DOCKER_PATH=$(command -v docker 2>/dev/null || echo "/usr/bin/docker") && \
+          echo "🔹 Using Docker binary at: $DOCKER_PATH" && \
+          if [ -z "$DOCKER_PATH" ]; then echo "❌ Docker binary not found!"; exit 1; fi && \
+          echo "🔹 Checking Docker version..." && \
+          sudo $DOCKER_PATH --version && \
+          echo "🔹 Logging into Docker Hub..." && \
+          echo "$(dockerHubPassword)" | sudo $DOCKER_PATH login -u girishr17181 --password-stdin && \
+          echo "🔹 Pulling latest Docker image..." && \
+          sudo $DOCKER_PATH pull girishr17181/hello-world:v1.0 && \
+          echo "🔹 Removing existing container (if running)..." && \
+          sudo $DOCKER_PATH rm -f hello-world-app || true && \
+          echo "🔹 Starting new container..." && \
+          sudo $DOCKER_PATH run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:v1.0 && \
+          echo "✅ Deployment successful!" && \
           sudo $DOCKER_PATH ps -a
