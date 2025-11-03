@@ -82,25 +82,23 @@ stages:
     steps:
     - checkout: self
 
-    # Download the artifact produced by Maven
     - download: current
       artifact: drop
 
-    # Verify that target folder is restored
     - script: |
-        echo "Files restored from artifact:"
-        ls -l $(Pipeline.Workspace)/drop
-      displayName: "Verify target directory"
+        echo "Copying JAR from artifact to working directory..."
+        cp $(Pipeline.Workspace)/drop/*.jar .
+        ls -l
+      displayName: "Prepare JAR for Docker build"
 
-    # Build Docker image using the restored artifact
     - task: Docker@2
       displayName: 'Build Docker Image'
       inputs:
         command: build
         Dockerfile: 'Dockerfile'
-        buildContext: '$(Pipeline.Workspace)/drop'
+        buildContext: '.'
         tags: |
-          girishr17181/hello-world:$(Build.BuildId)
+          girishr17181/hello-world:v1.0
           girishr17181/hello-world:latest
 
     - task: Docker@2
@@ -109,7 +107,8 @@ stages:
         command: push
         containerRegistry: 'docker-hub'
         tags: |
-          girishr17181/hello-world:$(Build.BuildId)
-          girishr17181/hello-world:latest     
+          girishr17181/hello-world:v1.0
+          girishr17181/hello-world:latest
+
 
 
