@@ -124,36 +124,33 @@ stages:
           latest
 
 # --- Stage 5: Deploy to EC2 ---
+# --- Stage 5: Deploy to EC2 ---
 - stage: DeployToEC2
-  displayName: "Deploy Docker Container to EC2"
+  displayName: 'Deploy Docker Container to AWS EC2'
   dependsOn: DockerBuild
   jobs:
   - job: Deploy
-    displayName: "Deploy Docker Container on EC2 via SSH"
-    pool:
-      name: default
-    variables:
-      - group: docker-credentials   # 👈 variable group containing dockerHubPassword
+    displayName: 'Deploy Docker Container on EC2'
     steps:
     - task: SSH@0
-      displayName: "Pull & Run Docker Container on EC2"
+      displayName: 'Deploy Docker Container'
       inputs:
-        sshEndpoint: 'ec2-ssh'     # 👈 your service connection to EC2
+        sshEndpoint: 'ec2-ssh'    # ✅ your EC2 service connection name in Azure DevOps
         runOptions: 'commands'
         commands: |
-          echo "🔹 Locating Docker binary..." && \
-          DOCKER_PATH=$(command -v docker 2>/dev/null || echo "/usr/bin/docker") && \
-          echo "🔹 Using Docker binary at: $DOCKER_PATH" && \
-          if [ -z "$DOCKER_PATH" ]; then echo "❌ Docker binary not found!"; exit 1; fi && \
-          echo "🔹 Checking Docker version..." && \
-          sudo $DOCKER_PATH --version && \
-          echo "🔹 Logging into Docker Hub..." && \
-          echo "$(dockerHubPassword)" | sudo $DOCKER_PATH login -u girishr17181 --password-stdin && \
-          echo "🔹 Pulling latest Docker image..." && \
-          sudo $DOCKER_PATH pull girishr17181/hello-world:v1.0 && \
-          echo "🔹 Removing existing container (if running)..." && \
-          sudo $DOCKER_PATH rm -f hello-world-app || true && \
-          echo "🔹 Starting new container..." && \
-          sudo $DOCKER_PATH run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:v1.0 && \
-          echo "✅ Deployment successful!" && \
-          sudo $DOCKER_PATH ps -a
+          echo "🚀 Starting Docker deployment on EC2..."
+
+          echo "🔹 Logging into Docker Hub..."
+          echo "$(dockerHubPassword)" | sudo docker login -u girishr17181 --password-stdin
+
+          echo "🔹 Pulling latest image..."
+          sudo docker pull girishr17181/hello-world:latest
+
+          echo "🔹 Removing any old container..."
+          sudo docker rm -f hello-world-app || true
+
+          echo "🔹 Starting new container..."
+          sudo docker run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:latest
+
+          echo "✅ Deployment successful! Running containers:"
+          sudo docker ps
