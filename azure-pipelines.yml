@@ -133,30 +133,30 @@ stages:
     pool:
       name: default
     variables:
-      - group: docker-credentials   # 👈 Docker Hub PAT securely stored here
+      - group: docker-credentials   # Variable group with dockerHubPassword
     steps:
     - task: SSH@0
       displayName: "Pull & Run Docker Container on EC2"
       inputs:
-        sshEndpoint: 'ec2-ssh'   # 👈 your EC2 SSH service connection name
+        sshEndpoint: 'ec2-ssh'
         runOptions: 'commands'
         commands: |
-          echo "🔹 Checking Docker version..."
-          sudo /usr/bin/docker --version
+          echo "🔹 Verifying Docker installation..."
+          sudo /usr/bin/docker --version || (echo "❌ Docker not found!" && exit 1)
 
           echo "🔹 Logging into Docker Hub..."
-          sudo /usr/bin/docker login -u girishr17181 -p $(dockerHubPassword)
+          echo "$(dockerHubPassword)" | sudo /usr/bin/docker login -u "girishr17181" --password-stdin
 
           echo "🔹 Pulling latest Docker image..."
           sudo /usr/bin/docker pull girishr17181/hello-world:v1.0
 
-          echo "🔹 Removing existing container if any..."
+          echo "🔹 Removing existing container (if running)..."
           sudo /usr/bin/docker rm -f hello-world-app || true
 
           echo "🔹 Starting new container..."
           sudo /usr/bin/docker run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:v1.0
 
-          echo "✅ Deployment completed successfully!"
+          echo "✅ Container deployed successfully!"
           sudo /usr/bin/docker ps
 
 
