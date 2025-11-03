@@ -141,14 +141,21 @@ stages:
         sshEndpoint: 'ec2-ssh'
         runOptions: 'commands'
         commands: |
-          echo "🔹 Detecting Docker binary..."
-          DOCKER_PATH=$(command -v docker || echo "/usr/bin/docker" || echo "/usr/local/bin/docker")
+          echo "🔹 Locating Docker binary..."
 
-          echo "🔹 Using Docker binary at: $DOCKER_PATH"
-          if [ ! -x "$DOCKER_PATH" ]; then
-            echo "❌ Docker not found at $DOCKER_PATH"
+          # Try common paths
+          if command -v docker >/dev/null 2>&1; then
+            DOCKER_PATH=$(command -v docker)
+          elif [ -f "/usr/bin/docker" ]; then
+            DOCKER_PATH="/usr/bin/docker"
+          elif [ -f "/usr/local/bin/docker" ]; then
+            DOCKER_PATH="/usr/local/bin/docker"
+          else
+            echo "❌ Docker not found on this machine!"
             exit 1
           fi
+
+          echo "🔹 Using Docker binary at: $DOCKER_PATH"
 
           echo "🔹 Checking Docker version..."
           sudo $DOCKER_PATH --version || (echo "❌ Docker not accessible" && exit 1)
@@ -165,6 +172,6 @@ stages:
           echo "🔹 Starting new container..."
           sudo $DOCKER_PATH run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:v1.0
 
-          echo "✅ Deployment completed!"
-          sudo $DOCKER_PATH ps
+          echo "✅ Deployment completed successfully!"
+          sudo $DOCKER_PATH ps -a
 
