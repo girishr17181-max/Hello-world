@@ -129,7 +129,7 @@ stages:
   displayName: 'Deploy Docker Container to AWS EC2'
   dependsOn: DockerBuild
   variables:
-    - group: docker-credentials   # ✅ variable group containing dockerHubPassword
+    - group: docker-credentials   # Contains dockerHubPassword secret
 
   jobs:
   - job: Deploy
@@ -138,22 +138,31 @@ stages:
     - task: SSH@0
       displayName: 'Pull & Run Docker Container on EC2'
       inputs:
-        sshEndpoint: 'ec2-ssh'    # ✅ your EC2 SSH service connection
+        sshEndpoint: 'ec2-ssh'
         runOptions: 'commands'
         commands: |
           echo "🚀 Starting deployment on EC2..."
 
+          # Ensure correct PATH and Docker location
+          if [ ! -x /usr/bin/docker ]; then
+            echo "❌ Docker not found at /usr/bin/docker. Checking other locations..."
+            which docker || ls -l /usr/local/bin/docker || exit 1
+          fi
+
+          echo "🔹 Docker version check..."
+          sudo /usr/bin/docker --version || exit 1
+
           echo "🔹 Logging into Docker Hub..."
-          docker login -u girishr17181 -p $(dockerHubPassword)
+          sudo /usr/bin/docker login -u girishr17181 -p $(dockerHubPassword)
 
           echo "🔹 Pulling latest image..."
-          sudo docker pull girishr17181/hello-world:latest
+          sudo /usr/bin/docker pull girishr17181/hello-world:latest
 
-          echo "🔹 Removing existing container..."
-          sudo docker rm -f hello-world-app || true
+          echo "🔹 Removing old container..."
+          sudo /usr/bin/docker rm -f hello-world-app || true
 
           echo "🔹 Starting new container..."
-          sudo docker run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:latest
+          sudo /usr/bin/docker run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:latest
 
-          echo "✅ Deployment complete!"
-          sudo docker ps
+          echo "✅ Deployment completed successfully!"
+          sudo /usr/bin/docker ps -a
