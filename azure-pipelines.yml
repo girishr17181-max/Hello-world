@@ -144,7 +144,7 @@ stages:
           echo "🚀 Starting deployment on EC2..."
 
           echo "🔹 Logging into Docker Hub..."
-          sudo docker login -u girishr17181 -p $(dockerHubPassword)
+          docker login -u girishr17181 -p $(dockerHubPassword)
 
           echo "🔹 Pulling latest image..."
           sudo docker pull girishr17181/hello-world:latest
