@@ -133,7 +133,7 @@ stages:
     pool:
       name: default
     variables:
-      - group: docker-credentials   # Variable group with dockerHubPassword
+      - group: docker-credentials
     steps:
     - task: SSH@0
       displayName: "Pull & Run Docker Container on EC2"
@@ -141,23 +141,30 @@ stages:
         sshEndpoint: 'ec2-ssh'
         runOptions: 'commands'
         commands: |
-          echo "🔹 Verifying Docker installation..."
-          sudo /usr/bin/docker --version || (echo "❌ Docker not found!" && exit 1)
+          echo "🔹 Detecting Docker binary..."
+          DOCKER_PATH=$(command -v docker || echo "/usr/bin/docker" || echo "/usr/local/bin/docker")
+
+          echo "🔹 Using Docker binary at: $DOCKER_PATH"
+          if [ ! -x "$DOCKER_PATH" ]; then
+            echo "❌ Docker not found at $DOCKER_PATH"
+            exit 1
+          fi
+
+          echo "🔹 Checking Docker version..."
+          sudo $DOCKER_PATH --version || (echo "❌ Docker not accessible" && exit 1)
 
           echo "🔹 Logging into Docker Hub..."
-          echo "$(dockerHubPassword)" | sudo /usr/bin/docker login -u "girishr17181" --password-stdin
+          echo "$(dockerHubPassword)" | sudo $DOCKER_PATH login -u girishr17181 --password-stdin
 
-          echo "🔹 Pulling latest Docker image..."
-          sudo /usr/bin/docker pull girishr17181/hello-world:v1.0
+          echo "🔹 Pulling latest image..."
+          sudo $DOCKER_PATH pull girishr17181/hello-world:v1.0
 
-          echo "🔹 Removing existing container (if running)..."
-          sudo /usr/bin/docker rm -f hello-world-app || true
+          echo "🔹 Stopping old container (if any)..."
+          sudo $DOCKER_PATH rm -f hello-world-app || true
 
           echo "🔹 Starting new container..."
-          sudo /usr/bin/docker run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:v1.0
+          sudo $DOCKER_PATH run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:v1.0
 
-          echo "✅ Container deployed successfully!"
-          sudo /usr/bin/docker ps
-
-
+          echo "✅ Deployment completed!"
+          sudo $DOCKER_PATH ps
 
