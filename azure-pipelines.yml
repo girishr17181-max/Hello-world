@@ -123,46 +123,35 @@ stages:
           v1.0
           latest
 
-# --- Stage 5: Deploy to EC2 ---
-# --- Stage 5: Deploy to EC2 ---
-- stage: DeployToEC2
-  displayName: 'Deploy Docker Container to AWS EC2'
+# --- Stage 5: Deploy to Local Mac Agent ---
+- stage: DeployToLocal
+  displayName: 'Deploy Docker Container on Local Mac Agent'
   dependsOn: DockerBuild
-  variables:
-    - group: docker-credentials   # Contains dockerHubPassword secret
-
   jobs:
   - job: Deploy
-    displayName: 'Deploy Docker Container on EC2'
+    displayName: 'Deploy Docker Container Locally'
+    pool:
+      name: default   # same as your self-hosted Mac agent pool
     steps:
-    - task: SSH@0
-      displayName: 'Pull & Run Docker Container on EC2'
-      inputs:
-        sshEndpoint: 'ec2-ssh'
-        runOptions: 'commands'
-        commands: |
-          echo "🚀 Starting deployment on EC2..."
+    - checkout: none
 
-          # Ensure correct PATH and Docker location
-          if [ ! -x /usr/bin/docker ]; then
-            echo "❌ Docker not found at /usr/bin/docker. Checking other locations..."
-            which docker || ls -l /usr/local/bin/docker || exit 1
-          fi
+    - script: |
+        echo "🚀 Starting deployment on Mac agent..."
 
-          echo "🔹 Docker version check..."
-          sudo /usr/bin/docker --version || exit 1
+        echo "🔹 Logging into Docker Hub..."
+        docker login -u girishr17181 -p $(dockerHubPassword)
 
-          echo "🔹 Logging into Docker Hub..."
-          sudo /usr/bin/docker login -u girishr17181 -p $(dockerHubPassword)
+        echo "🔹 Pulling latest image..."
+        docker pull girishr17181/hello-world:latest
 
-          echo "🔹 Pulling latest image..."
-          sudo /usr/bin/docker pull girishr17181/hello-world:latest
+        echo "🔹 Removing old container if exists..."
+        docker rm -f hello-world-app || true
 
-          echo "🔹 Removing old container..."
-          sudo /usr/bin/docker rm -f hello-world-app || true
+        echo "🔹 Running new container..."
+        docker run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:latest
 
-          echo "🔹 Starting new container..."
-          sudo /usr/bin/docker run -d -p 8080:8080 --name hello-world-app girishr17181/hello-world:latest
-
-          echo "✅ Deployment completed successfully!"
-          sudo /usr/bin/docker ps -a
+        echo "✅ Deployment completed successfully!"
+        docker ps -a
+      displayName: 'Deploy Docker Container'
+      env:
+        dockerHubPassword: $(dockerHubPassword)
